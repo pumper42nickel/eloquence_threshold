@@ -1,3 +1,6 @@
+eloquence.nvda-addon
+eloquence_original.nvda-addon
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
