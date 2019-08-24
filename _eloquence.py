@@ -102,12 +102,7 @@ class eciThread(threading.Thread):
     params[msg.lParam] = msg.wParam
     param_event.set()
    elif msg.message == WM_VPARAM:
-    (param, val) = msg.wParam, msg.lParam
-#don't set unless we have to
-#This doesn't fix the rate problem, though.
-#    if param in vparams and vparams[param] == val: continue
-    dll.eciSetVoiceParam(handle, 0, msg.wParam, msg.lParam)
-    vparams[msg.wParam] = msg.lParam
+    setVParamImpl(param=msg.wParam, val=msg.lParam)
     param_event.set()
    elif msg.message == WM_COPYVOICE:
     dll.eciCopyVoice(handle, msg.wParam, 0)
@@ -259,12 +254,18 @@ def speak(text):
  #Sometimes the synth slows down for one string of text. Why?
  #Trying to fix it here.
  if rate in vparams: text = "`vs%d" % (vparams[rate],)+text
- text = text.encode("ansi")
+ text = text.encode("mbcs")
 
  dll.eciAddText(handle, text)
 
 def index(x):
  dll.eciInsertIndex(handle, x)
+ 
+def cmdProsody(pr, multiplier):
+ value = getVParam(pr)
+ if multiplier:
+  value = int(value * multiplier)
+ setVParam(pr, value, temporary=True)
 
 def synth():
  global speaking
@@ -294,12 +295,27 @@ def set_voice(vl):
 
 def getVParam(pr):
  return vparams[pr]
+ 
+def  isInEciThread():
+ return tid == windll.kernel32.GetCurrentThreadId()
 
-def setVParam(pr, vl):
- user32.PostThreadMessageA(tid, WM_VPARAM, pr, vl)
- param_event.wait()
- param_event.clear()
-
+def setVParam(pr, vl, temporary=False):
+ if isInEciThread():
+  # We are running inside eciThread, so do it synchronously
+  setVParamImpl(pr, vl, temporary)
+ else:
+  # Send a message to eciThread
+  assert(not temporary, "Can only set vParams permanently from another thread.")
+  user32.PostThreadMessageA(tid, WM_VPARAM, pr, vl)
+  param_event.wait()
+  param_event.clear()
+  
+def setVParamImpl(param, val, temporary=False):
+    global handle
+    dll.eciSetVoiceParam(handle, 0, param, val)
+    if not temporary:
+     vparams[param] = val
+     
 def setVariant(v):
  user32.PostThreadMessageA(tid, WM_COPYVOICE, v, 0)
  param_event.wait()

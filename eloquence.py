@@ -78,7 +78,13 @@ class SynthDriver(synthDriverHandler.SynthDriver):
     speech.VolumeCommand,
     speech.PhonemeCommand,
  }
- #supportedNotifications = {synthIndexReached, synthDoneSpeaking} 
+ supportedNotifications = {synthIndexReached, synthDoneSpeaking} 
+ PROSODY_ATTRS = {
+  speech.PitchCommand: _eloquence.pitch,
+  speech.VolumeCommand: _eloquence.vlm,
+  speech.RateCommand: _eloquence.rate,
+ }
+ 
  description='ETI-Eloquence'
  name='eloquence'
  @classmethod
@@ -91,7 +97,6 @@ class SynthDriver(synthDriverHandler.SynthDriver):
   self.variant = "1"
 
  def speak(self,speechSequence):
-  #  print speechSequence
   last = None
   outlist = []
   for item in speechSequence:
@@ -102,6 +107,13 @@ class SynthDriver(synthDriverHandler.SynthDriver):
     last = s
    elif isinstance(item,speech.IndexCommand):
     outlist.append((_eloquence.index, (item.index,)))
+   elif type(item) in self.PROSODY_ATTRS:
+    pr = self.PROSODY_ATTRS[type(item)]
+    if item.multiplier==1:
+     # Revert back to defaults
+     outlist.append((_eloquence.cmdProsody, (pr, None,)))
+    else:
+     outlist.append((_eloquence.cmdProsody, (pr, item.multiplier,)))
   if last is not None and not last.rstrip()[-1] in punctuation:
    outlist.append((_eloquence.speak, ('`p1.',)))
   outlist.append((_eloquence.index, (0xffff,)))
