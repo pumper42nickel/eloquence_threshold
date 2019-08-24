@@ -9,10 +9,10 @@ import ctypes.wintypes
 from ctypes import wintypes
 import synthDriverHandler, os, config, re, nvwave, threading, logging
 from synthDriverHandler import SynthDriver, VoiceInfo, synthIndexReached, synthDoneSpeaking
-#import Queue
 from synthDriverHandler import SynthDriver,VoiceInfo
 from . import _eloquence
 from collections import OrderedDict
+import unicodedata
 
 minRate=40
 maxRate=150
@@ -45,6 +45,27 @@ variants = {1:"Reed",
 6:"Sandy",
 7:"Grandma",
 8:"Grandpa"}
+
+def strip_accents(s):
+  return ''.join(c for c in unicodedata.normalize('NFD', s)
+                  if unicodedata.category(c) != 'Mn')  
+                  
+def normalizeText(s):
+  """
+  Normalizes  text by removing unicode characters.
+  Tries to preserve accented characters if they fall into MBCS encoding page.
+  Tries to find closest ASCII characters if accented characters cannot be represented in MBCS.
+  """
+  result = []
+  for c in s:
+   try:
+    cc = c.encode('mbcs').decode('mbcs')
+   except UnicodeEncodeError:
+    cc = strip_accents(c)
+    # TODO: If synth still crashes on weird characters, check if cc is within MBS codepage, and if not, replace it with "?"
+   result.append(cc)
+  return "".join(result)
+
 class SynthDriver(synthDriverHandler.SynthDriver):
  supportedSettings=(SynthDriver.VoiceSetting(), SynthDriver.VariantSetting(), SynthDriver.RateSetting(),SynthDriver.PitchSetting(),SynthDriver.InflectionSetting(),SynthDriver.VolumeSetting())
  supportedCommands = {
@@ -87,7 +108,6 @@ class SynthDriver(synthDriverHandler.SynthDriver):
   outlist.append((_eloquence.synth,()))
   _eloquence.synth_queue.put(outlist)
   _eloquence.process()
-  #tones.beep(500, 50)
 
  def xspeakText(self,text, should_pause=False):
   if _eloquence.params[9] == 65536 or _eloquence.params[9] == 65537: text = resub(english_fixes, text)
@@ -95,6 +115,7 @@ class SynthDriver(synthDriverHandler.SynthDriver):
   if _eloquence.params[9] in (196609, 196608): text = resub(french_fixes, text)
   #this converts to ansi for anticrash. If this breaks with foreign langs, we can remove it.
   #text = text.encode('mbcs')
+  text = normalizeText(text)
   text = resub(anticrash_res, text)
   text = "`pp0 `vv%d %s" % (self.getVParam(_eloquence.vlm), text.replace('`', ' ')) #no embedded commands
   text = pause_re.sub(r'\1 `p1\2\3', text)
