@@ -110,6 +110,9 @@ class SynthDriver(synthDriverHandler.SynthDriver):
     last = s
    elif isinstance(item,speech.IndexCommand):
     outlist.append((_eloquence.index, (item.index,)))
+   elif isinstance(item,speech.BreakCommand):
+    pFactor = 3 * item.time
+    outlist.append((_eloquence.speak, (f'`p{pFactor}.',)))
    elif type(item) in self.PROSODY_ATTRS:
     pr = self.PROSODY_ATTRS[type(item)]
     if item.multiplier==1:
