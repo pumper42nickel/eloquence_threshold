@@ -1,3 +1,5 @@
+http://www.wizzardsoftware.com/docs/tts.pdf
+
 IBM Text-to-Speech
 API Reference
 Version 6.4.0 Printed in the USA
