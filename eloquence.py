@@ -62,7 +62,10 @@ def normalizeText(s):
     cc = c.encode('mbcs').decode('mbcs')
    except UnicodeEncodeError:
     cc = strip_accents(c)
-    # TODO: If synth still crashes on weird characters, check if cc is within MBS codepage, and if not, replace it with "?"
+    try:
+     cc.encode('mbcs')
+    except UnicodeEncodeError:
+     cc = "?"
    result.append(cc)
   return "".join(result)
 
