@@ -7,7 +7,7 @@ punctuation = [x for x in punctuation]
 from ctypes import *
 import ctypes.wintypes
 from ctypes import wintypes
-import synthDriverHandler, os, config, re, nvwave, threading, logging
+import synthDriverHandler, os, config, re, nvwave, threading, logging,driverHandler
 from synthDriverHandler import SynthDriver, VoiceInfo, synthIndexReached, synthDoneSpeaking
 from synthDriverHandler import SynthDriver,VoiceInfo
 from . import _eloquence
@@ -17,11 +17,15 @@ import unicodedata
 minRate=40
 maxRate=150
 anticrash_res = {
- re.compile(r'\b(|\d+|\W+)(|un|anti|re)c(ae|\xe6)sur', re.I): r'\1\2seizur',
+ re.compile(r'\b(|\d+|\W+)?(|un|anti|re)c(ae|\xe6)sur', re.I): r'\1\2seizur',
  re.compile(r"\b(|\d+|\W+)h'(r|v)[e]", re.I): r"\1h ' \2 e",
-# re.compile(r"\b(|\d+|\W+)wed[h]esday", re.I): r"\1wed hesday",
-re.compile(r'hesday'): ' hesday',
-  re.compile(r"\b(|\d+|\W+)tz[s]che", re.I): r"\1tz sche"
+ re.compile(r"\b(\w+[bdflmnrvzqh])hes([bcdfgjklmnprtw]\w+)\b", re.I): r"\1 hes\2",
+ re.compile(r"(\d):(\d\d[snrt][tdh])", re.I): r"\1 \2",
+ re.compile(r"h'([bdfjkpstvx']+)'([rtv][aeiou]?)", re.I): r"h \1 \2",
+ re.compile(r"(re|un|non|anti)cosp", re.I): r"\1kosp",
+ re.compile(r"(anti|non|re|un)caesure", re.I): r"\1ceasure",
+ re.compile(r"(EUR[A-Z]+)(\d+)", re.I): r"\1 \2",
+ re.compile(r"\b(|\d+|\W+)?t+z[s]che", re.I): r"\1tz sche"
 }
 
 pause_re = re.compile(r'([a-zA-Z])([.(),:;!?])( |$)')
@@ -70,7 +74,7 @@ def normalizeText(s):
   return "".join(result)
 
 class SynthDriver(synthDriverHandler.SynthDriver):
- supportedSettings=(SynthDriver.VoiceSetting(), SynthDriver.VariantSetting(), SynthDriver.RateSetting(),SynthDriver.PitchSetting(),SynthDriver.InflectionSetting(),SynthDriver.VolumeSetting())
+ supportedSettings=(SynthDriver.VoiceSetting(), SynthDriver.VariantSetting(), SynthDriver.RateSetting(), SynthDriver.PitchSetting(),SynthDriver.InflectionSetting(),SynthDriver.VolumeSetting(), driverHandler.NumericDriverSetting("hsz", "Head Size"), driverHandler.NumericDriverSetting("rgh", "Roughness"), driverHandler.NumericDriverSetting("bth", "Breathiness"), driverHandler.BooleanDriverSetting("backquoteVoiceTags","Enable backquote voice &tags", True))
  supportedCommands = {
     speech.IndexCommand,
     speech.CharacterModeCommand,
@@ -153,7 +157,16 @@ class SynthDriver(synthDriverHandler.SynthDriver):
 
  def terminate(self):
   _eloquence.terminate()
+ _backquoteVoiceTags=False
+ _ABRDICT=False
+ def _get_backquoteVoiceTags(self):
+  return self._backquoteVoiceTags
 
+ def _set_backquoteVoiceTags(self, enable):
+  if enable == self._backquoteVoiceTags:
+   return
+  self._backquoteVoiceTags = enable
+ 
  def _get_rate(self):
   return self._paramToPercent(self.getVParam(_eloquence.rate),minRate,maxRate)
 
@@ -179,6 +192,26 @@ class SynthDriver(synthDriverHandler.SynthDriver):
 
  def _get_inflection(self):
   return self.getVParam(_eloquence.fluctuation)
+ def _set_hsz(self,vl):
+  vl = int(vl)
+  self.setVParam(_eloquence.hsz,vl)
+
+ def _get_hsz(self):
+  return self.getVParam(_eloquence.hsz)
+
+ def _set_rgh(self,vl):
+  vl = int(vl)
+  self.setVParam(_eloquence.rgh,vl)
+
+ def _get_rgh(self):
+  return self.getVParam(_eloquence.rgh)
+
+ def _set_bth(self,vl):
+  vl = int(vl)
+  self.setVParam(_eloquence.bth,vl)
+
+ def _get_bth(self):
+  return self.getVParam(_eloquence.bth)
 
  def _getAvailableVoices(self):
   o = OrderedDict()

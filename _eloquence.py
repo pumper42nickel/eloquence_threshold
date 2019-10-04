@@ -27,8 +27,11 @@ stopped = threading.Event()
 started = threading.Event()
 param_event = threading.Event()
 Callback = WINFUNCTYPE(c_int, c_int, c_int, c_int, c_void_p)
+hsz=1
 pitch=2
 fluctuation=3
+rgh=4
+bth=5
 rate=6
 vlm=7
 lastindex=0
@@ -106,7 +109,7 @@ class eciThread(threading.Thread):
     param_event.set()
    elif msg.message == WM_COPYVOICE:
     dll.eciCopyVoice(handle, msg.wParam, 0)
-    for i in (rate, pitch, vlm, fluctuation):
+    for i in (rate, pitch, vlm, fluctuation, hsz, rgh, bth):
      vparams[i] = dll.eciGetVoiceParam(handle, 0, i)
     param_event.set()
    elif msg.message == WM_KILL:
