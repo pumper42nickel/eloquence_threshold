@@ -139,7 +139,9 @@ class SynthDriver(synthDriverHandler.SynthDriver):
   #text = text.encode('mbcs')
   text = normalizeText(text)
   text = resub(anticrash_res, text)
-  text = "`pp0 `vv%d %s" % (self.getVParam(_eloquence.vlm), text.replace('`', ' ')) #no embedded commands
+  if not self._backquoteVoiceTags:
+   text=text.replace('`', ' ')
+  text = "`pp0 `vv%d %s" % (self.getVParam(_eloquence.vlm), text) #no embedded commands
   text = pause_re.sub(r'\1 `p1\2\3', text)
   text = time_re.sub(r'\1:\2 \3', text)
   #if two strings are sent separately, pause between them. This might fix some of the audio issues we're having.
@@ -158,7 +160,6 @@ class SynthDriver(synthDriverHandler.SynthDriver):
  def terminate(self):
   _eloquence.terminate()
  _backquoteVoiceTags=False
- _ABRDICT=False
  def _get_backquoteVoiceTags(self):
   return self._backquoteVoiceTags
 
