@@ -79,9 +79,9 @@ class eciThread(threading.Thread):
   dll.eciSetDict(handle, self.dictionaryHandle)
   #0 = main dictionary
   if os.path.exists(os.path.join(os.path.dirname(eciPath), "main.dic")):
-   dll.eciLoadDict(handle, self.dictionaryHandle, 0, os.path.join(os.path.dirname(eciPath), "main.dic"))
+   dll.eciLoadDict(handle, self.dictionaryHandle, 0, os.path.join(os.path.dirname(eciPath), "main.dic").encode('mbcs'))
   if os.path.exists(os.path.join(os.path.dirname(eciPath), "root.dic")):
-   dll.eciLoadDict(handle, self.dictionaryHandle, 1, os.path.join(os.path.dirname(eciPath), "root.dic"))
+   dll.eciLoadDict(handle, self.dictionaryHandle, 1, os.path.join(os.path.dirname(eciPath), "root.dic").encode('mbcs'))
   params[9] = dll.eciGetParam(handle, 9)
   started.set()
   while True:
