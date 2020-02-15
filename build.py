@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os,re,sys
+import os,re,sys,time
 if (sys.version_info < (3, 0)):
     raise Exception("Python 3 required")
 import urllib.request
@@ -26,7 +26,12 @@ def updateZip(zipname, filename, filedata):
 
     # replace with the temp archive
     os.remove(zipname)
-    os.rename(tmpname, zipname)
+    #print(f"os.rename({tmpname}, {zipname})")
+    # For some really weird reason the following command not always works in certain conditions
+    # So replacing it with an external call
+    #os.rename(tmpname, zipname)
+    os.system(f"rename {tmpname} {zipname}")
+    time.sleep(1)
 
     # now add filename with its new data
     with zipfile.ZipFile(zipname, mode='a', compression=zipfile.ZIP_DEFLATED) as zf:

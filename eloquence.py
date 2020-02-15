@@ -115,7 +115,31 @@ class SynthDriver(synthDriverHandler.SynthDriver):
    elif isinstance(item,speech.IndexCommand):
     outlist.append((_eloquence.index, (item.index,)))
    elif isinstance(item,speech.BreakCommand):
-    pFactor = 3 * item.time
+    # Eloquence doesn't respect delay time in milliseconds.
+    # Therefor we need to adjust waiting time depending on curernt speech rate
+    # The following table of adjustments has been measured empirically
+    # Then we do linear approximation
+    coefficients = {
+        10:1,
+        43:2,
+        60:3,
+        75: 4,
+        85:5,
+    }
+    ck = sorted(coefficients.keys())
+    if self.rate <= ck[0]:
+     factor = coefficients[ck[0]]
+    elif self.rate >= ck[-1]:
+     factor = coefficients[ck[-1]]
+    elif self.rate in ck:
+     factor = coefficients[self.rate]
+    else:
+     li = [index for index, r in enumerate(ck) if r<self.rate][-1]
+     ri = li + 1
+     ra = ck[li]
+     rb = ck[ri]
+     factor = 1.0 * coefficients[ra] + (coefficients[rb] - coefficients[ra]) * (self.rate - ra) / (rb-ra)
+    pFactor = factor*item.time
     outlist.append((_eloquence.speak, (f'`p{pFactor}.',)))
    elif type(item) in self.PROSODY_ATTRS:
     pr = self.PROSODY_ATTRS[type(item)]
