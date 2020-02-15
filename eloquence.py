@@ -140,6 +140,7 @@ class SynthDriver(synthDriverHandler.SynthDriver):
      rb = ck[ri]
      factor = 1.0 * coefficients[ra] + (coefficients[rb] - coefficients[ra]) * (self.rate - ra) / (rb-ra)
     pFactor = factor*item.time
+    pFactor = int(pFactor)
     outlist.append((_eloquence.speak, (f'`p{pFactor}.',)))
    elif type(item) in self.PROSODY_ATTRS:
     pr = self.PROSODY_ATTRS[type(item)]
