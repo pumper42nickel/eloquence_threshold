@@ -74,7 +74,7 @@ def normalizeText(s):
   return "".join(result)
 
 class SynthDriver(synthDriverHandler.SynthDriver):
- supportedSettings=(SynthDriver.VoiceSetting(), SynthDriver.VariantSetting(), SynthDriver.RateSetting(), SynthDriver.PitchSetting(),SynthDriver.InflectionSetting(),SynthDriver.VolumeSetting(), driverHandler.NumericDriverSetting("hsz", "Head Size"), driverHandler.NumericDriverSetting("rgh", "Roughness"), driverHandler.NumericDriverSetting("bth", "Breathiness"), driverHandler.BooleanDriverSetting("backquoteVoiceTags","Enable backquote voice &tags", True))
+ supportedSettings=(SynthDriver.VoiceSetting(), SynthDriver.VariantSetting(), SynthDriver.RateSetting(), SynthDriver.PitchSetting(),SynthDriver.InflectionSetting(),SynthDriver.VolumeSetting(), driverHandler.NumericDriverSetting("hsz", "Head Size"), driverHandler.NumericDriverSetting("rgh", "Roughness"), driverHandler.NumericDriverSetting("bth", "Breathiness"), driverHandler.BooleanDriverSetting("backquoteVoiceTags","Enable backquote voice &tags", True), driverHandler.BooleanDriverSetting("ABRDICT","Enable &abbreviation dictionary", False))
  supportedCommands = {
     speech.IndexCommand,
     speech.CharacterModeCommand,
@@ -169,6 +169,10 @@ class SynthDriver(synthDriverHandler.SynthDriver):
   text = "`pp0 `vv%d %s" % (self.getVParam(_eloquence.vlm), text) #no embedded commands
   text = pause_re.sub(r'\1 `p1\2\3', text)
   text = time_re.sub(r'\1:\2 \3', text)
+  if self._ABRDICT:
+   text="`da1 "+text
+  else:
+   text="`da0 "+text
   #if two strings are sent separately, pause between them. This might fix some of the audio issues we're having.
   if should_pause:
    text = text + ' `p1.'
@@ -185,6 +189,7 @@ class SynthDriver(synthDriverHandler.SynthDriver):
  def terminate(self):
   _eloquence.terminate()
  _backquoteVoiceTags=False
+ _ABRDICT=False
  def _get_backquoteVoiceTags(self):
   return self._backquoteVoiceTags
 
@@ -192,7 +197,12 @@ class SynthDriver(synthDriverHandler.SynthDriver):
   if enable == self._backquoteVoiceTags:
    return
   self._backquoteVoiceTags = enable
- 
+ def _get_ABRDICT(self):
+  return self._ABRDICT
+ def _set_ABRDICT(self, enable):
+  if enable == self._ABRDICT:
+   return
+  self._ABRDICT = enable 
  def _get_rate(self):
   return self._paramToPercent(self.getVParam(_eloquence.rate),minRate,maxRate)
 

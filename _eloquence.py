@@ -74,7 +74,6 @@ class eciThread(threading.Thread):
   dll.eciRegisterCallback(handle, callback, None)
   dll.eciSetOutputBuffer(handle, samples, pointer(buffer))
   dll.eciSetParam(handle,1, 1)
-  dll.eciSetParam(handle,3, 1) #dictionary off
   self.dictionaryHandle = dll.eciNewDict(handle)
   dll.eciSetDict(handle, self.dictionaryHandle)
   #0 = main dictionary
