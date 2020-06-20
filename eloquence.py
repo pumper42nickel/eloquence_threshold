@@ -74,7 +74,7 @@ def normalizeText(s):
   return "".join(result)
 
 class SynthDriver(synthDriverHandler.SynthDriver):
- supportedSettings=(SynthDriver.VoiceSetting(), SynthDriver.VariantSetting(), SynthDriver.RateSetting(), SynthDriver.PitchSetting(),SynthDriver.InflectionSetting(),SynthDriver.VolumeSetting(), driverHandler.NumericDriverSetting("hsz", "Head Size"), driverHandler.NumericDriverSetting("rgh", "Roughness"), driverHandler.NumericDriverSetting("bth", "Breathiness"), driverHandler.BooleanDriverSetting("backquoteVoiceTags","Enable backquote voice &tags", True), driverHandler.BooleanDriverSetting("ABRDICT","Enable &abbreviation dictionary", False))
+ supportedSettings=(SynthDriver.VoiceSetting(), SynthDriver.VariantSetting(), SynthDriver.RateSetting(), SynthDriver.PitchSetting(),SynthDriver.InflectionSetting(),SynthDriver.VolumeSetting(), driverHandler.NumericDriverSetting("hsz", "Head Size"), driverHandler.NumericDriverSetting("rgh", "Roughness"), driverHandler.NumericDriverSetting("bth", "Breathiness"), driverHandler.BooleanDriverSetting("backquoteVoiceTags","Enable backquote voice &tags", True), driverHandler.BooleanDriverSetting("ABRDICT","Enable &abbreviation dictionary", False), driverHandler.BooleanDriverSetting("phrasePrediction","Enable phrase prediction", False))
  supportedCommands = {
     speech.IndexCommand,
     speech.CharacterModeCommand,
@@ -166,13 +166,17 @@ class SynthDriver(synthDriverHandler.SynthDriver):
   text = resub(anticrash_res, text)
   if not self._backquoteVoiceTags:
    text=text.replace('`', ' ')
-  text = "`pp0 `vv%d %s" % (self.getVParam(_eloquence.vlm), text) #no embedded commands
+  text = "`vv%d %s" % (self.getVParam(_eloquence.vlm), text) #no embedded commands
   text = pause_re.sub(r'\1 `p1\2\3', text)
   text = time_re.sub(r'\1:\2 \3', text)
   if self._ABRDICT:
    text="`da1 "+text
   else:
    text="`da0 "+text
+  if self._phrasePrediction:
+   text="`pp1 "+text
+  else:
+   text="`pp0 "+text
   #if two strings are sent separately, pause between them. This might fix some of the audio issues we're having.
   if should_pause:
    text = text + ' `p1.'
@@ -190,6 +194,7 @@ class SynthDriver(synthDriverHandler.SynthDriver):
   _eloquence.terminate()
  _backquoteVoiceTags=False
  _ABRDICT=False
+ _phrasePrediction=False
  def _get_backquoteVoiceTags(self):
   return self._backquoteVoiceTags
 
@@ -203,6 +208,12 @@ class SynthDriver(synthDriverHandler.SynthDriver):
   if enable == self._ABRDICT:
    return
   self._ABRDICT = enable 
+ def _get_phrasePrediction(self):
+  return self._phrasePrediction
+ def _set_phrasePrediction(self, enable):
+  if enable == self._phrasePrediction:
+   return
+  self._phrasePrediction = enable
  def _get_rate(self):
   return self._paramToPercent(self.getVParam(_eloquence.rate),minRate,maxRate)
 
