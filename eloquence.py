@@ -17,7 +17,7 @@ import unicodedata
 minRate=40
 maxRate=150
 anticrash_res = {
- re.compile(r'\b(|\d+|\W+)?(|un|anti|re)c(ae|\xe6)sur', re.I): br'\1\2seizur',
+ re.compile(r'\b(|\d+|\W+)?(|un|anti|re|ultra|mis|cyber)c(ae|\xe6)sur', re.I): br'\1\2seizur',
  re.compile(r"\b(|\d+|\W+)h'(r|v)[e]", re.I): r"\1h ' \2 e",
  re.compile(r"\b(\w+[bdflmnrvzqh])(h[he]s)([bcdfgjklmnoprstw]\w+)\b", re.I): r"\1 \2\3",
  re.compile(r"([bcdfghjklmnpstvwxz])'([bdfhjklmnpstvxz']+)'([rtv][aeiou]?)", re.I): r"\1 \2 \3",
