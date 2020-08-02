@@ -14,7 +14,7 @@ import config
 from ctypes import wintypes
 import threading, os, queue, re
 import nvwave
-
+nvwave.WavePlayer.MIN_BUFFER_MS=1500
 user32 = windll.user32
 eci = None
 tid = None
