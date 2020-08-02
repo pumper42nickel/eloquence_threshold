@@ -244,7 +244,7 @@ def initialize(indexCallback=None):
  global eci, player, bgt, dll, handle, onIndexReached
 
  onIndexReached = indexCallback
- player = nvwave.WavePlayer(1, 11025, 16, outputDevice=config.conf["speech"]["outputDevice"])
+ player = nvwave.WavePlayer(1, 11025, 16, outputDevice=config.conf["speech"]["outputDevice"], buffered=True)
  eci = eciThread()
  eci.start()
  started.wait()
