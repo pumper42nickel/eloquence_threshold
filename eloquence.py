@@ -17,15 +17,16 @@ import unicodedata
 minRate=40
 maxRate=150
 anticrash_res = {
- re.compile(r'\b(|\d+|\W+)?(|un|anti|re|ultra|mis|cyber|over|under)c(ae|\xe6)sur', re.I): br'\1\2seizur',
+ re.compile(r'\b(.*?)c(ae|\xe6)sur(e)?', re.I): r'\1seizur',
  re.compile(r"\b(|\d+|\W+)h'(r|v)[e]", re.I): r"\1h ' \2 e",
- re.compile(r"\b(\w+[bdflmnrvzqh])(h[he]s)([bcdfgjklmnoprstw]\w+)\b", re.I): r"\1 \2\3",
- re.compile(r"([bcdfghjklmnpstvwxz])'([bdfhjklmnpstvxz']+)'([rtv][aeiou]?)", re.I): r"\1 \2 \3",
+ re.compile(r"\b(\w+[bdfhjlmnqrvz])(h[he]s)([abcdfghjklmnoprstvw]\w+)\b", re.I): r"\1 \2\3",
  re.compile(r"(\d):(\d\d[snrt][tdh])", re.I): r"\1 \2",
+ re.compile(r"\b([bcdfghjklmnpstvwxz]+)'([bcdefghjklmnpstvwxz']+)'([rtv][aeiou]?)", re.I): r"\1 \2 \3",
+ re.compile(r"\b(you+)'(re)+'([rv]e)", re.I): r"\1 \2 \3",
  re.compile(r"(re|un|non|anti)cosp", re.I): r"\1kosp",
- re.compile(r"(anti|non|re|un|ultra|mis|cyber|over|under)caesure", re.I): r"\1ceasure",
  re.compile(r"(EUR[A-Z]+)(\d+)", re.I): r"\1 \2",
- re.compile(r"\b(|\d+|\W+|[A-Z]+|\d+)?t+z[s]che", re.I): r"\1tz sche"
+ re.compile(r"\b(\d+|\W+|[bcdfghjklmnpqrstvwxz]+)?t+z[s]che", re.I): r"\1tz sche",
+ re.compile(r"\b(juar[aeou]s)([aeiou]{6,})", re.I): r"\1 \2"
 }
 
 pause_re = re.compile(r'([a-zA-Z])([.(),:;!?])( |$)')
