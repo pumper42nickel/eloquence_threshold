@@ -77,10 +77,18 @@ class eciThread(threading.Thread):
   self.dictionaryHandle = dll.eciNewDict(handle)
   dll.eciSetDict(handle, self.dictionaryHandle)
   #0 = main dictionary
-  if os.path.exists(os.path.join(os.path.dirname(eciPath), "main.dic")):
+  if os.path.exists(os.path.join(os.path.dirname(eciPath), "enumain.dic")):
+   dll.eciLoadDict(handle, self.dictionaryHandle, 0, os.path.join(os.path.dirname(eciPath), "enumain.dic").encode('mbcs'))
+  elif os.path.exists(os.path.join(os.path.dirname(eciPath), "main.dic")):
    dll.eciLoadDict(handle, self.dictionaryHandle, 0, os.path.join(os.path.dirname(eciPath), "main.dic").encode('mbcs'))
-  if os.path.exists(os.path.join(os.path.dirname(eciPath), "root.dic")):
+  if os.path.exists(os.path.join(os.path.dirname(eciPath), "enuroot.dic")):
+   dll.eciLoadDict(handle, self.dictionaryHandle, 1, os.path.join(os.path.dirname(eciPath), "enuroot.dic").encode('mbcs'))
+  elif os.path.exists(os.path.join(os.path.dirname(eciPath), "root.dic")):
    dll.eciLoadDict(handle, self.dictionaryHandle, 1, os.path.join(os.path.dirname(eciPath), "root.dic").encode('mbcs'))
+  if os.path.exists(os.path.join(os.path.dirname(eciPath), "enuabbr.dic")):
+   dll.eciLoadDict(handle, self.dictionaryHandle, 2, os.path.join(os.path.dirname(eciPath), "enuabbr.dic").encode('mbcs'))
+  elif os.path.exists(os.path.join(os.path.dirname(eciPath), "abbr.dic")):
+   dll.eciLoadDict(handle, self.dictionaryHandle, 2, os.path.join(os.path.dirname(eciPath), "abbr.dic").encode('mbcs'))
   params[9] = dll.eciGetParam(handle, 9)
   started.set()
   while True:
