@@ -42,6 +42,11 @@ spanish_fixes = {
 #for emails
 re.compile(r'([a-zA-Z0-9_]+)@(\w+)'): r'\1 arroba \2',
 }
+german_fixes = {
+#Crash words
+re.compile(r'dane-ben', re.I): r'dane- ben',
+	re.compile(r'dage-gen', re.I): r'dage- gen',
+}
 variants = {1:"Reed",
 2:"Shelley",
 3:"Bobby",
@@ -161,6 +166,7 @@ class SynthDriver(synthDriverHandler.SynthDriver):
   if _eloquence.params[9] == 65536 or _eloquence.params[9] == 65537: text = resub(english_fixes, text)
   if _eloquence.params[9] == 131072 or _eloquence.params[9] == 131073: text = resub(spanish_fixes, text)
   if _eloquence.params[9] in (196609, 196608): text = resub(french_fixes, text)
+  if _eloquence.params[9] in ('deu', 262144): text = resub(german_fixes, text)
   #this converts to ansi for anticrash. If this breaks with foreign langs, we can remove it.
   #text = text.encode('mbcs')
   text = normalizeText(text)
