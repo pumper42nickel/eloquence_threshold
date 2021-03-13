@@ -2,6 +2,30 @@
 #synthDrivers/eci.py
 #todo: possibly add to this
 import speech, tones
+try:
+    from speech import (
+        IndexCommand,
+        CharacterModeCommand,
+        LangChangeCommand,
+        BreakCommand,
+        PitchCommand,
+        RateCommand,
+        VolumeCommand,
+        PhonemeCommand,
+    )
+except ImportError:
+    from speech.commands import (
+        IndexCommand,
+        CharacterModeCommand,
+        LangChangeCommand,
+        BreakCommand,
+        PitchCommand,
+        RateCommand,
+        VolumeCommand,
+        PhonemeCommand,
+    )
+
+
 punctuation = ",.?:;"
 punctuation = [x for x in punctuation]
 from ctypes import *
@@ -82,20 +106,20 @@ def normalizeText(s):
 class SynthDriver(synthDriverHandler.SynthDriver):
  supportedSettings=(SynthDriver.VoiceSetting(), SynthDriver.VariantSetting(), SynthDriver.RateSetting(), SynthDriver.PitchSetting(),SynthDriver.InflectionSetting(),SynthDriver.VolumeSetting(), driverHandler.NumericDriverSetting("hsz", "Head Size"), driverHandler.NumericDriverSetting("rgh", "Roughness"), driverHandler.NumericDriverSetting("bth", "Breathiness"), driverHandler.BooleanDriverSetting("backquoteVoiceTags","Enable backquote voice &tags", True), driverHandler.BooleanDriverSetting("ABRDICT","Enable &abbreviation dictionary", False), driverHandler.BooleanDriverSetting("phrasePrediction","Enable phrase prediction", False))
  supportedCommands = {
-    speech.IndexCommand,
-    speech.CharacterModeCommand,
-    speech.LangChangeCommand,
-    speech.BreakCommand,
-    speech.PitchCommand,
-    speech.RateCommand,
-    speech.VolumeCommand,
-    speech.PhonemeCommand,
+    IndexCommand,
+    CharacterModeCommand,
+    LangChangeCommand,
+    BreakCommand,
+    PitchCommand,
+    RateCommand,
+    VolumeCommand,
+    PhonemeCommand,
  }
  supportedNotifications = {synthIndexReached, synthDoneSpeaking} 
  PROSODY_ATTRS = {
-  speech.PitchCommand: _eloquence.pitch,
-  speech.VolumeCommand: _eloquence.vlm,
-  speech.RateCommand: _eloquence.rate,
+  PitchCommand: _eloquence.pitch,
+  VolumeCommand: _eloquence.vlm,
+  RateCommand: _eloquence.rate,
  }
  
  description='ETI-Eloquence'
@@ -118,9 +142,9 @@ class SynthDriver(synthDriverHandler.SynthDriver):
     s = self.xspeakText(s)
     outlist.append((_eloquence.speak, (s,)))
     last = s
-   elif isinstance(item,speech.IndexCommand):
+   elif isinstance(item,IndexCommand):
     outlist.append((_eloquence.index, (item.index,)))
-   elif isinstance(item,speech.BreakCommand):
+   elif isinstance(item,BreakCommand):
     # Eloquence doesn't respect delay time in milliseconds.
     # Therefor we need to adjust waiting time depending on curernt speech rate
     # The following table of adjustments has been measured empirically
