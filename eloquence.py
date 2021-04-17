@@ -24,6 +24,11 @@ except ImportError:
         VolumeCommand,
         PhonemeCommand,
     )
+    
+try:
+    from driverHandler import NumericDriverSetting, BooleanDriverSetting
+except ImportError:
+    from autoSettingsUtils.driverSetting import BooleanDriverSetting, DriverSetting, NumericDriverSetting
 
 
 punctuation = ",.?:;"
@@ -104,7 +109,7 @@ def normalizeText(s):
   return "".join(result)
 
 class SynthDriver(synthDriverHandler.SynthDriver):
- supportedSettings=(SynthDriver.VoiceSetting(), SynthDriver.VariantSetting(), SynthDriver.RateSetting(), SynthDriver.PitchSetting(),SynthDriver.InflectionSetting(),SynthDriver.VolumeSetting(), driverHandler.NumericDriverSetting("hsz", "Head Size"), driverHandler.NumericDriverSetting("rgh", "Roughness"), driverHandler.NumericDriverSetting("bth", "Breathiness"), driverHandler.BooleanDriverSetting("backquoteVoiceTags","Enable backquote voice &tags", True), driverHandler.BooleanDriverSetting("ABRDICT","Enable &abbreviation dictionary", False), driverHandler.BooleanDriverSetting("phrasePrediction","Enable phrase prediction", False))
+ supportedSettings=(SynthDriver.VoiceSetting(), SynthDriver.VariantSetting(), SynthDriver.RateSetting(), SynthDriver.PitchSetting(),SynthDriver.InflectionSetting(),SynthDriver.VolumeSetting(), NumericDriverSetting("hsz", "Head Size"), NumericDriverSetting("rgh", "Roughness"), NumericDriverSetting("bth", "Breathiness"), BooleanDriverSetting("backquoteVoiceTags","Enable backquote voice &tags", True), BooleanDriverSetting("ABRDICT","Enable &abbreviation dictionary", False), BooleanDriverSetting("phrasePrediction","Enable phrase prediction", False))
  supportedCommands = {
     IndexCommand,
     CharacterModeCommand,
