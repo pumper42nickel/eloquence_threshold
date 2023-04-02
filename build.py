@@ -1,12 +1,10 @@
 #!/usr/bin/python
 
-import os,re,sys,time
+import sys
 if (sys.version_info < (3, 0)):
     raise Exception("Python 3 required")
-import urllib.request
-import shutil
-import tempfile
-import zipfile
+
+import shutil, tempfile, zipfile, os, time
 
 ORIGINAL_FILE_NAME = "eloquence_original.nvda-addon"
 FILE_NAME = "eloquence.nvda-addon"
@@ -37,12 +35,16 @@ def updateZip(zipname, filename, filedata):
     with zipfile.ZipFile(zipname, mode='a', compression=zipfile.ZIP_DEFLATED) as zf:
         zf.write(filedata, filename)
 
-
 if not os.path.exists(ORIGINAL_FILE_NAME):
-    with urllib.request.urlopen('https://jeff.tdrealms.com/Add-Ons/Eloquence.nvda-addon') as response:
-        with open(ORIGINAL_FILE_NAME, "wb") as f:
-            shutil.copyfileobj(response, f)
-shutil.copyfile(ORIGINAL_FILE_NAME, FILE_NAME)
+    print("Cannot find original Eloquence file. Will retrieve it manually.")
+    buildSystemPathToEloquence = r"%s\nvda\addons\Eloquence" %(os.getenv('APPDATA'))
+    if not os.path.exists(buildSystemPathToEloquence):
+        raise Exception("End of the road, cannot find original Eloquence.")
+    shutil.make_archive("eloquence-tmp", format="zip", root_dir=buildSystemPathToEloquence)
+    os.system(f"rename eloquence-tmp.zip {FILE_NAME}")
+    time.sleep(1)
+else:
+    shutil.copyfile(ORIGINAL_FILE_NAME, FILE_NAME)
 updateZip(FILE_NAME, "synthDrivers/eloquence.py", "eloquence.py")
 updateZip(FILE_NAME, "synthDrivers/_eloquence.py", "_eloquence.py")
 updateZip(FILE_NAME, "manifest.ini", "manifest.ini")
