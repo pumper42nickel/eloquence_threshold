@@ -39,9 +39,11 @@ def updateZip(zipname, filename, filedata):
 
 
 if not os.path.exists(ORIGINAL_FILE_NAME):
-    with urllib.request.urlopen('https://jeff.tdrealms.com/Add-Ons/Eloquence.nvda-addon') as response:
+    print("Downloading...")
+    with urllib.request.urlopen('https://github.com/pumper42nickel/eloquence_threshold/releases/download/v0.20210417.01/eloquence.nvda-addon') as response:
         with open(ORIGINAL_FILE_NAME, "wb") as f:
             shutil.copyfileobj(response, f)
+print("Patching...")
 shutil.copyfile(ORIGINAL_FILE_NAME, FILE_NAME)
 updateZip(FILE_NAME, "synthDrivers/eloquence.py", "eloquence.py")
 updateZip(FILE_NAME, "synthDrivers/_eloquence.py", "_eloquence.py")
