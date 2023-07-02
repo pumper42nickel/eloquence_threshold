@@ -166,7 +166,7 @@ def setLast(lp):
  global lastindex
  lastindex = lp
  #we can use this to set player idle
-# player.idle()
+ #player.idle()
 def bgPlay(stri, onDone=None):
  if len(stri) == 0: return
  # Sometimes player.feed() tries to open the device when it's already open,
@@ -219,6 +219,7 @@ def callback (h, ms, lp, dt):
    flush(updateIndex=True, index=curindex)
   else: #We reached the end of string
    flush(updateIndex=True, index=None)
+   _bgExec(player.idle)
  return 1
 
 class BgThread(threading.Thread):
