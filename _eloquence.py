@@ -2,6 +2,7 @@ import time
 import logging
 import ctypes
 from io import StringIO, BytesIO
+from versionInfo import version_year
 
 gb = BytesIO()
 empty_gb = BytesIO()
@@ -14,7 +15,6 @@ import config
 from ctypes import wintypes
 import threading, os, queue, re
 import nvwave
-nvwave.WavePlayer.MIN_BUFFER_MS=1500
 user32 = windll.user32
 eci = None
 tid = None
@@ -253,7 +253,14 @@ def initialize(indexCallback=None):
  global eci, player, bgt, dll, handle, onIndexReached
 
  onIndexReached = indexCallback
- player = nvwave.WavePlayer(1, 11025, 16, outputDevice=config.conf["speech"]["outputDevice"], buffered=True)
+ if version_year >= 2025:
+  device = config.conf["audio"]["outputDevice"]
+  ducking = True if config.conf["audio"]["audioDuckingMode"] else False
+  player = nvwave.WavePlayer(1, 11025, 16, outputDevice=device, wantDucking=ducking)
+ else:
+  device = config.conf["speech"]["outputDevice"]
+  nvwave.WavePlayer.MIN_BUFFER_MS = 1500
+  player = nvwave.WavePlayer(1, 11025, 16, outputDevice=device, buffered=True)
  eci = eciThread()
  eci.start()
  started.wait()
