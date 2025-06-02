@@ -192,6 +192,8 @@ class SynthDriver(synthDriverHandler.SynthDriver):
   _eloquence.process()
 
  def xspeakText(self,text, should_pause=False):
+  # Presumably dashes are handled as symbols by NVDA symbol processing, so strip extra ones to avoid too many dashes.
+  text = text.replace("-", " ")
   if _eloquence.params[9] == 65536 or _eloquence.params[9] == 65537: text = resub(english_fixes, text)
   if _eloquence.params[9] == 131072 or _eloquence.params[9] == 131073: text = resub(spanish_fixes, text)
   if _eloquence.params[9] in (196609, 196608): text = resub(french_fixes, text)
