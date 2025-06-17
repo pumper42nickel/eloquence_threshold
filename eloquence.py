@@ -2,6 +2,7 @@
 #synthDrivers/eci.py
 #todo: possibly add to this
 import speech, tones
+import api
 try:
     from speech import (
         IndexCommand,
@@ -139,8 +140,12 @@ class SynthDriver(synthDriverHandler.SynthDriver):
   self.variant = "1"
 
  def speak(self,speechSequence):
+  #api.f.append([item for item in speechSequence if isinstance(item, str)])
+  api.f = []
+  api.f.append([item for item in speechSequence ])
   last = None
   outlist = []
+  outlist.append((_eloquence.preSpeak, ()))
   for item in speechSequence:
    if isinstance(item,str):
     s=str(item)
@@ -224,10 +229,12 @@ class SynthDriver(synthDriverHandler.SynthDriver):
   #  self.dll.eciStop(self.handle)
 
  def pause(self,switch):
+  api.f.append("pause")
   _eloquence.pause(switch)
   #  self.dll.eciPause(self.handle,switch)
 
  def terminate(self):
+  api.f.append("terminate")
   _eloquence.terminate()
  _backquoteVoiceTags=False
  _ABRDICT=False

@@ -3,6 +3,7 @@ import logging
 import ctypes
 from io import StringIO, BytesIO
 from versionInfo import version_year
+from logHandler import log
 
 gb = BytesIO()
 empty_gb = BytesIO()
@@ -185,15 +186,165 @@ def bgPlay(stri, onDone=None):
    tries += 1
  logging.error("Eloq speech failed to feed one buffer.")
 
+import globalVars
+def findRate():
+    settings = [
+        setting
+        for setting in globalVars.settingsRing.settings
+        if setting.setting.id == 'rate'
+    ]
+    return settings[0]
+import functools, operator
+def computeZeroRuns():
+    if not "LAM" in str(api.f[0]):
+        return
+    def top_zero_intervals(data: bytes, top_n=10):
+        intervals = []
+        current_len = 0
+    
+        for b in data:
+            if b == 0:
+                current_len += 1
+            else:
+                if current_len > 0:
+                    intervals.append(current_len)
+                    current_len = 0
+    
+        if current_len > 0:  # Handle if zeros end at the last byte
+            intervals.append(current_len)
+    
+        top_lengths = sorted(intervals, reverse=True)[:top_n]
+        return top_lengths
+    data = functools.reduce(operator.add, [item for item in api.f if isinstance(item, bytes)])
+    topi = top_zero_intervals(data)
+    rate = findRate().value
+    log.warn("".join(s for s in api.f[0] if isinstance(s, str)))
+    log.warn(f"asdf r{rate} {topi}")
+    
+
+def remove_zero_runs(data: bytes, min_run: int = 800) -> bytes:
+    result = bytearray()
+    i = 0
+    n = len(data)
+
+    while i < n:
+        if data[i] == 0:
+            start = i
+            while i < n and data[i] == 0:
+                i += 1
+            run_length = i - start
+            if run_length < min_run:
+                result.extend(data[start:i])
+            # else: skip this run (i.e., remove it)
+        else:
+            result.append(data[i])
+            i += 1
+
+    return bytes(result)
+
+def analyzeVoice(data):
+    import struct
+    
+    def decode_pcm_bytes(data_bytes):
+        # '<' = little-endian, 'h' = 16-bit signed int
+        return list(struct.unpack('<' + 'h' * (len(data_bytes) // 2), data_bytes))
+    
+    import math
+    import cmath
+    
+    def fft(signal):
+        N = len(signal)
+        if N <= 1:
+            return signal[:]  # Make sure to return a list, even for 1 element
+        even = fft(signal[0::2])
+        odd = fft(signal[1::2])
+        combined = [0] * N
+        for k in range(N // 2):
+            twiddle = cmath.exp(-2j * math.pi * k / N) * odd[k]
+            combined[k] = even[k] + twiddle
+            combined[k + N // 2] = even[k] - twiddle
+        return combined
+    
+    def pad_to_power_of_two(signal):
+        n = 1
+        while n < len(signal):
+            n *= 2
+        return signal + [0] * (n - len(signal))
+    
+    def detect_speech(data_bytes, sample_rate=16000):
+        signal = decode_pcm_bytes(data_bytes)
+        signal = pad_to_power_of_two(signal)
+        spectrum = fft(signal)
+        magnitudes = [abs(c) for c in spectrum]
+        n = len(signal)
+        freqs = [(sample_rate * i) / n for i in range(n // 2)]
+        # Focus only on first half (real-valued frequencies)
+        total_energy = sum(magnitudes[:n//2])
+        band_energy = sum(
+            m for f, m in zip(freqs, magnitudes[:n//2]) if 300 <= f <= 3000
+        )
+        ratio = band_energy / total_energy if total_energy else 0
+        #print(f"Band energy ratio: {ratio:.2f}")
+        #api.f.append((ratio, band_energy, total_energy))
+        return ratio > 0.3 and band_energy > 1000  # Adjust as needed
+    
+    detect_speech(data)
+
+def remove_up_to_longest_zero_run(data: bytes) -> bytes:
+    if len(data) % 2 != 0:
+        raise ValueError("Data length must be even (2 bytes per int16)")
+
+    max_len = 0
+    max_start = 0
+    current_len = 0
+    current_start = 0
+
+    for i in range(0, len(data), 2):
+        if data[i] == 0 and data[i + 1] == 0:
+            if current_len == 0:
+                current_start = i
+            current_len += 2
+            if current_len > max_len:
+                max_len = current_len
+                max_start = current_start
+        else:
+            current_len = 0
+    analyzeVoice(data[:max_start])
+    return data[max_start + max_len:]
+
+import api
+api.f = []
 def flush(updateIndex=False, index=None):
+ global currentSamples, justSeenPitchChange 
+ global lastPitchSynthesized, lastPitchSet
  onDone = None
  if updateIndex:
   onDone = lambda i=index: onIndexReached(i)
  this_gb = gb if gb.tell() > 0 else empty_gb
- _bgExec(bgPlay,
-  this_gb.getvalue(),
-  onDone=onDone,
- )
+ api.f.append(this_gb.getvalue())
+ if updateIndex:
+  api.f.append(index)
+  if index is None:
+   computeZeroRuns()
+   if "PESP" in str(api.f[0]):
+    api.g = api.f[:]
+ #filteredData = remove_zero_runs(this_gb.getvalue())
+ filteredData = this_gb.getvalue()
+ if len(filteredData) > 500:
+  lastPitchSynthesized = lastPitchSet
+ if justSeenPitchChange and currentSamples >= 500:
+  filteredData = remove_up_to_longest_zero_run(filteredData)
+  pass
+ justSeenPitchChange = False
+ if updateIndex and index is not None and PITCH_INDEX <= index <= PITCH_INDEX + 100:
+  lastPitchSet = index - PITCH_INDEX
+  justSeenPitchChange = lastPitchSet != lastPitchSynthesized and lastPitchSynthesized is not None
+ if len(filteredData) > 0:
+  currentSamples += len(filteredData) // 2
+  _bgExec(bgPlay,
+   filteredData,
+   onDone=onDone,
+  )
  gb.seek(0)
  gb.truncate(0)
  if updateIndex and index is not None:
@@ -268,6 +419,20 @@ def initialize(indexCallback=None):
  bgt = BgThread()
  bgt.start()
 
+currentSamples = 0
+justSeenPitchChange = False
+lastPitchSet = None
+lastPitchSynthesized = None
+def preSpeak():
+ global currentSamples, justSeenPitchChange 
+ currentSamples = 0
+ justSeenPitchChange = False
+ global lastPitchSet, lastPitchSynthesized
+ lastPitchSet = None
+ lastPitchSynthesized = None
+ currentPitch = dll.eciGetVoiceParam(handle, 0, pitch)
+ index(PITCH_INDEX + currentPitch)
+
 def speak(text):
  #Sometimes the synth slows down for one string of text. Why?
  #Trying to fix it here.
@@ -276,6 +441,8 @@ def speak(text):
 
  dll.eciAddText(handle, text)
 
+PITCH_INDEX = 14242 # NVDA never uses indices above 10000
+
 def index(x):
  dll.eciInsertIndex(handle, x)
  
@@ -283,6 +450,15 @@ def cmdProsody(pr, multiplier):
  value = getVParam(pr)
  if multiplier:
   value = int(value * multiplier)
+ if pr == pitch:
+  currentValue = dll.eciGetVoiceParam(handle, 0, pitch)
+  global lastPitchSet
+  lastPitchSet = currentValue
+  #if value != currentValue:
+  if True:
+   global PITCH_INDEX
+   #PITCH_INDEX += 1
+   index(PITCH_INDEX + value)
  setVParam(pr, value, temporary=True)
 
 def synth():
